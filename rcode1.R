@@ -444,12 +444,135 @@ ggplot(data = gap, aes(x = gap$gdpPercap, y = gap$lifeExp, color = continent)) +
   geom_smooth(method = "lm") +
   facet_wrap(~year)
 
+# Day 2 Part 2 with James 
+
+##### Data Manipulation #####
+
+# Make sure packages are installed
+install.packages(c("tidyr", "dplyr", "knitr", "rmarkdown", "formatR"))
+
+library(dplyr) # Needed for subsetting data
+library(tidyr) # Needed for reshaping data
+library(ggplot2) # Needed for graphing
+
+# Read in our dataset
+gap <- read.csv(file = "data/gapminder-FiveYearData.csv")
+
+#### dplyr ###
+
+head(gap)
+yr_country_gdp <- select(gap, year, country, gdpPercap)
+head(yr_country_gdp)
+
+# %>% is a "pipe" that sends data to another function
+yr_country_gdp <- gap %>% select(year, country, gdpPercap)
+head(yr_country_gdp)
+
+# so now these three columns in gap are the first argument in select
+
+# can subset data by rows using "filter"
+
+yr_country_gdp_eu <- gap %>% 
+  select(year, country, gdpPercap) %>%
+  filter(continent == "Europe")
+
+# get error because order of operations is reversed - can't choose continent
+# because only have year, country, gdpPercap columns
+
+yr_country_gdp_eu <- gap %>% 
+  filter(continent == "Europe")%>%
+  select(year, country, gdpPercap)
+
+africa_2007 <- gap %>%
+  filter(continent == "Africa", year == "2007")%>%
+  select(year, country, lifeExp)
+
+nrow(africa_2007)
+dim(africa_2007)
+
+# Filters don't cancel each other out, so can do like this
+africa_2007 <- gap %>%
+filter(continent == "Africa")%>%
+filter(year == "2007")%>%
+  select(year, country, lifeExp)
+
+nrow(africa_2007)
+
+# figure out meanGDP
+
+mean_gdp <- gap %>% 
+  summarize(meanGDP = mean(gdpPercap))
+
+mean_gdp
+mean(gap$dgpPercap)
+mean(gap$gdpPercap)
+
+gpd_by_cont <- gap %>%
+  group_by(continent) %>%
+  summarize(meanGDP = mean(gdpPercap))
+
+gdp_by_cont
+gpd_by_cont
+
+gdp_by_cont <- gap %>%
+  group_by(continent, year) %>%
+  summarize(meanGDP = mean(gdpPercap),
+                           sd_gdp = sd(gdpPercap),
+            mean_pop = mean(pop),
+            sample_size = n()
+  )
+
+gdp_by_cont
 
 
 
+#put resulting table gdp_by_cont back in regular data frame
+
+gdp_by_cont %>%
+  data.frame() %>%
+  head()
+
+gdp_by_cont %>%
+  ggplot(aes(x = mean_pop, y = meanGDP)) +
+  geom_point()
+
+# can't do + in dplyr or %>% in ggplot, make sure you don't mix em up
+# mutate is how we make new columns
+
+#express gpd by billion per people
 
 
+gap <- read.csv(file = "data/gapminder-FiveYearData.csv")
+
+bill_gdp <- gap %>%
+  filter(year == "2007") %>%
+  mutate(bill_gdp) = gdpPercap * pop / 10^9
 
 
+gap_wide <- read.csv(file = "data/gapminder_wide.csv")
+gap_wide
 
+gap_long <- gap_wide %>%
+  gather(obstype_year, obs_values, starts_with('pop'),
+         starts_with('lifeExp'), starts_with('gdpPerCap'))
+head(gap_long)
+str(gap_long)
+
+gap_long <- gap_long %>%
+  separate(obstype_year, into = c("obs_type", "year"),
+           sep = "_")
+
+
+head(gap_long)
+str(gap_long)
+
+# unite is the opposite of separate
+
+wide <- gap_long %>%
+  unite(var_names, obs_type, year, sep = "_") %>%
+  spread(var_names, obs_values)
+
+head(wide)
+structure(wide)
+str(wide)
 
